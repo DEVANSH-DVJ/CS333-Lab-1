@@ -57,19 +57,31 @@ int main(int argc, char *argv[]) {
     tokens = tokenize(line);
 
     // do whatever you want with the commands, here we just print them
-    int ret = fork();
-    if (ret < 0) {
-      printf("Shell: Error while calling fork\n");
-    } else if (ret == 0) {
-      int p = execvp(tokens[0], tokens);
-      if (p == -1) {
+    if (!strcmp(tokens[0], "cd")) {
+      // TODO: Add cd - command for fun
+      if (tokens[1] == NULL || tokens[2] != NULL)
         printf("Shell: Incorrect command\n");
-        exit(0);
+      else {
+        int l = chdir(tokens[1]);
+        if (l == -1) {
+          printf("Shell: Directory not found\n");
+        }
       }
-    } else if (ret > 0) {
-      int k = waitpid(ret, NULL, 0);
-      if (k == -1) {
-        printf("Shell: Error while calling waitpid\n");
+    } else {
+      int ret = fork();
+      if (ret < 0) {
+        printf("Shell: Error while calling fork\n");
+      } else if (ret == 0) {
+        int p = execvp(tokens[0], tokens);
+        if (p == -1) {
+          printf("Shell: Incorrect command\n");
+          exit(0);
+        }
+      } else if (ret > 0) {
+        int k = waitpid(ret, NULL, 0);
+        if (k == -1) {
+          printf("Shell: Error while calling waitpid\n");
+        }
       }
     }
 
