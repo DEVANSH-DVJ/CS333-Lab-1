@@ -57,7 +57,9 @@ int main(int argc, char *argv[]) {
     tokens = tokenize(line);
 
     // do whatever you want with the commands, here we just print them
-    if (!strcmp(tokens[0], "cd")) {
+    if (tokens[0] == NULL) {
+      printf("Nothing to do\n");
+    } else if (!strcmp(tokens[0], "cd")) {
       // TODO: Add cd - command for fun
       if (tokens[1] == NULL || tokens[2] != NULL)
         printf("Shell: Incorrect command\n");
