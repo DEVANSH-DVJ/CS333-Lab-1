@@ -43,6 +43,17 @@ char **tokenize(char *line) {
 
 void bg(char *line) {
   char **tokens = tokenize(line);
+  int i;
+
+  for (i = 0; i < MAX_BG_PROCESS; i++) {
+    if (background_proc[i] == -1) {
+      break;
+    }
+  }
+  if (i == MAX_BG_PROCESS) {
+    printf("Can't handle more background processes\n");
+    return;
+  }
   int ret = fork();
   if (ret < 0) {
     printf("Shell: Error while calling fork\n");
@@ -54,12 +65,7 @@ void bg(char *line) {
       exit(0);
     }
   } else { // ret > 0, Parent process with ret as Child PID
-    for (int i = 0; i < 64; i++) {
-      if (background_proc[i] == -1) {
-        background_proc[i] = ret;
-        break;
-      }
-    }
+    background_proc[i] = ret;
   }
 }
 
