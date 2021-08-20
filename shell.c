@@ -15,7 +15,12 @@ int background_proc[MAX_BG_PROCESS];
 int foreground_proc[MAX_FG_PROCESS];
 int interrupt;
 
-// Splits the string by space and returns the array of tokens
+/**
+ * @fn tokenize
+ * @param[in] line
+ * @return tokens
+ * @brief Split line into tokens
+ */
 char **tokenize(char *line) {
   char **tokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
   char *token = (char *)malloc(MAX_TOKEN_SIZE * sizeof(char));
@@ -42,9 +47,16 @@ char **tokenize(char *line) {
   return tokens;
 }
 
+/**
+ * @fn background
+ * @param[in] tokens
+ * @brief Run the command by forking and calling executable (except cd).
+ *        Don't wait for it to end (run as background process)
+ */
 void background(char **tokens) {
   int i;
 
+  // Check availability of background process and set i accordingly
   for (i = 0; i < MAX_BG_PROCESS; i++) {
     if (background_proc[i] == -1) {
       break;
@@ -54,29 +66,46 @@ void background(char **tokens) {
     printf("Shell: Can't handle more background processes\n");
     return;
   }
+
+  // Fork to run the the command
   int ret = fork();
   if (ret < 0) {
     printf("Shell: Error while calling fork\n");
-  } else if (ret == 0) { // Child process
+  } else if (ret == 0) {
+    // Child process
+    // Assign a different process group id
     setpgid(0, 0);
+
     if (tokens[0] == NULL) {
+      // Nothing to do
     } else if (!strcmp(tokens[0], "cd")) {
+      // Doesn't make sense to run cd in background
     } else {
+      // Load and run the executable
       int p = execvp(tokens[0], tokens);
       if (p == -1) {
         printf("Shell: Incorrect command\n");
       }
     }
     exit(0);
-  } else { // ret > 0, Parent process with ret as Child PID
+  } else { // ret > 0
+    // Parent process with ret as Child PID
     background_proc[i] = ret;
   }
 }
 
+/**
+ * @fn normal
+ * @param[in] tokens
+ * @brief Run the command by forking and calling executable (except cd).
+ *        Wait for it to end (run as foreground process)
+ */
 void normal(char **tokens) {
   if (tokens[0] == NULL) {
+    // Nothing to do
   } else if (!strcmp(tokens[0], "cd")) {
-    // TODO: Add "cd -" compatibility for fun
+    // Special case cd
+    // Check for format of argument
     if (tokens[1] == NULL || tokens[2] != NULL)
       printf("Shell: Incorrect command\n");
     else {
@@ -86,16 +115,21 @@ void normal(char **tokens) {
       }
     }
   } else {
+    // Fork to run the the command
     int ret = fork();
     if (ret < 0) {
       printf("Shell: Error while calling fork\n");
-    } else if (ret == 0) { // Child process
+    } else if (ret == 0) {
+      // Child process
+      // Load and run the executable
       int p = execvp(tokens[0], tokens);
       if (p == -1) {
         printf("Shell: Incorrect command\n");
       }
       exit(0);
-    } else { // ret > 0, Parent process with ret as Child PID
+    } else { // ret > 0
+      // Parent process with ret as Child PID
+      // Wait for the child process to terminate then reap it
       int k = waitpid(ret, NULL, 0);
       if (k == -1) {
         printf("Shell: Error while calling waitpid\n");
@@ -104,14 +138,21 @@ void normal(char **tokens) {
   }
 }
 
+/**
+ * @fn run
+ * @param[in] tokens
+ * @brief Detect background process and accordingly run the command
+ */
 void run(char **tokens) {
   int i;
   int bg = 0;
 
+  // Don't run if interrupt is set to 1
   if (interrupt == 1) {
     return;
   }
 
+  // Check if it is background (ends with "&") or not
   for (i = 0; tokens[i] != NULL; ++i) {
     if (!strcmp(tokens[i], "&") && tokens[i + 1] == NULL) {
       tokens[i] = NULL;
@@ -120,6 +161,7 @@ void run(char **tokens) {
     }
   }
 
+  // Separately run background process
   if (bg) {
     background(tokens);
   } else {
@@ -127,30 +169,46 @@ void run(char **tokens) {
   }
 }
 
+/**
+ * @fn series
+ * @param[in] tokens
+ * @brief Splits the token into components based on "&&".
+ *        Run them one after another in foreground
+ */
 void series(char **tokens) {
   char **ptokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
   int i, j;
 
+  // Split into components
   j = 0;
   for (i = 0; tokens[i] != NULL; ++i) {
     if (strcmp(tokens[i], "&&")) {
       ptokens[j] = tokens[i];
       ++j;
     } else {
+      // If encountered a "&&", segment till now is run and waited for
       ptokens[j] = NULL;
       run(ptokens);
       j = 0;
     }
   }
+  // Same for last segment
   ptokens[j] = NULL;
   run(ptokens);
 
+  // Free the allocated memory
   free(ptokens);
 }
 
+/**
+ * @fn parallel
+ * @param[in] tokens
+ * @brief Run the command on a new shell as a foreground process
+ */
 void parallel(char **tokens) {
   int i;
 
+  // Check availability of foreground process and set i accordingly
   for (i = 0; i < MAX_FG_PROCESS; i++) {
     if (foreground_proc[i] == -1) {
       break;
@@ -160,35 +218,49 @@ void parallel(char **tokens) {
     printf("Shell: Can't handle more foreground processes\n");
     return;
   }
+
+  // Fork another shell to run the command
   int ret = fork();
   if (ret < 0) {
     printf("Shell: Error while calling fork\n");
-  } else if (ret == 0) { // Child process
+  } else if (ret == 0) {
+    // Child process
     series(tokens);
     exit(0);
-  } else { // ret > 0, Parent process with ret as Child PID
+  } else { // ret > 0
+    // Parent process with ret as Child PID
     foreground_proc[i] = ret;
   }
 }
 
+/**
+ * @fn work
+ * @param[in] tokens
+ * @brief Splits the token into components based on "&&&".
+ *        Run them parallelly in foreground
+ */
 void work(char **tokens) {
   char **ptokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
   int i, j;
 
+  // Split into components
   j = 0;
   for (i = 0; tokens[i] != NULL; ++i) {
     if (strcmp(tokens[i], "&&&")) {
       ptokens[j] = tokens[i];
       ++j;
     } else {
+      // If encountered a "&&&", segment till now is run on a new shell
       ptokens[j] = NULL;
       parallel(ptokens);
       j = 0;
     }
   }
+  // Last segment is run on the current shell itself
   ptokens[j] = NULL;
   series(ptokens);
 
+  // Wait for all foreground processes to end
   for (i = 0; i < MAX_FG_PROCESS; ++i) {
     if (foreground_proc[i] > 0) {
       int k = waitpid(foreground_proc[i], NULL, 0);
@@ -200,9 +272,16 @@ void work(char **tokens) {
     }
   }
 
+  // Free the allocated memory
   free(ptokens);
 }
 
+/**
+ * @fn handle_sig
+ * @param[in] sig
+ * @brief SIGINT handler
+ *        Does nothing, just sets interrupt to 1 (no new command will run)
+ */
 void handle_sig(int sig) {
   printf("\n");
   interrupt = 1;
@@ -213,8 +292,10 @@ int main(int argc, char *argv[]) {
   char **tokens;
   int i;
 
+  // SIGINT handler added
   signal(SIGINT, handle_sig);
 
+  // Initialize list of background and foreground processes
   for (i = 0; i < MAX_BG_PROCESS; ++i) {
     background_proc[i] = -1;
   }
@@ -223,11 +304,13 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
+    // Scan the line
     bzero(line, sizeof(line));
     printf("$ ");
     scanf("%[^\n]", line);
     getchar();
 
+    // Reap background child processes which have ended
     for (i = 0; i < MAX_BG_PROCESS; i++) {
       if (background_proc[i] > 0) {
         int k = waitpid(background_proc[i], NULL, WNOHANG);
@@ -240,11 +323,14 @@ int main(int argc, char *argv[]) {
       }
     }
 
-    line[strlen(line)] = '\n'; // terminate with new line
-    tokens = tokenize(line);   // convert line to tokens
+    // Break the line into tokens
+    line[strlen(line)] = '\n';
+    tokens = tokenize(line);
 
     if (tokens[0] == NULL) {
+      // Nothing to do
     } else if (!strcmp(tokens[0], "exit")) {
+      // Kill background processes before exit
       for (i = 0; i < MAX_BG_PROCESS; i++) {
         if (background_proc[i] > -1) {
           kill(background_proc[i], SIGKILL);
@@ -252,19 +338,22 @@ int main(int argc, char *argv[]) {
         }
       }
 
-      // Freeing the allocated memory
+      // Free the allocated memory
       for (i = 0; tokens[i] != NULL; i++) {
         free(tokens[i]);
       }
       free(tokens);
 
+      // Just exit
       return 0;
     } else {
+      // Set interrupt to 0 (new command will run)
       interrupt = 0;
-      work(tokens); // work on the tokens
+      // Work on the tokens
+      work(tokens);
     }
 
-    // Freeing the allocated memory
+    // Free the allocated memory
     for (i = 0; tokens[i] != NULL; i++) {
       free(tokens[i]);
     }
