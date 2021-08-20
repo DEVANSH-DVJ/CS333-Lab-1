@@ -127,6 +127,25 @@ void run(char **tokens) {
   }
 }
 
+void split_parallel(char **tokens) {
+  char **ptokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
+  int i, j;
+
+  j = 0;
+  for (i = 0; tokens[i] != NULL; ++i) {
+    if (strcmp(tokens[i], "&&&")) {
+      ptokens[j] = tokens[i];
+      ++j;
+    } else {
+      ptokens[j] = NULL;
+      run(ptokens);
+      j = 0;
+    }
+  }
+  ptokens[j] = NULL;
+  run(ptokens);
+}
+
 int main(int argc, char *argv[]) {
   char line[MAX_INPUT_SIZE];
   char **tokens;
@@ -162,7 +181,7 @@ int main(int argc, char *argv[]) {
     // do whatever you want with the commands, here we just print them
     line[strlen(line)] = '\n'; // terminate with new line
     tokens = tokenize(line);
-    run(tokens);
+    split_parallel(tokens);
 
     // for (i = 0; tokens[i] != NULL; i++) {
     //   printf("found token %s (remove this debug output later)\n", tokens[i]);
