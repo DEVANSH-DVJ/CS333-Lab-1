@@ -108,8 +108,7 @@ void normal(char **tokens) {
   }
 }
 
-void run(char line[]) {
-  char **tokens = tokenize(line);
+void run(char **tokens) {
   int i;
   int bg = 0;
 
@@ -126,20 +125,11 @@ void run(char line[]) {
   } else {
     normal(tokens);
   }
-
-  for (i = 0; tokens[i] != NULL; i++) {
-    printf("found token %s (remove this debug output later)\n", tokens[i]);
-  }
-
-  // Freeing the allocated memory
-  for (i = 0; tokens[i] != NULL; i++) {
-    free(tokens[i]);
-  }
-  free(tokens);
 }
 
 int main(int argc, char *argv[]) {
   char line[MAX_INPUT_SIZE];
+  char **tokens;
   int i;
 
   for (i = 0; i < MAX_BG_PROCESS; ++i) {
@@ -157,8 +147,6 @@ int main(int argc, char *argv[]) {
 
     printf("Command entered: %s (remove this debug output later)\n", line);
 
-    line[strlen(line)] = '\n'; // terminate with new line
-
     for (i = 0; i < MAX_BG_PROCESS; i++) {
       if (background_proc[i] > 0) {
         int k = waitpid(background_proc[i], NULL, WNOHANG);
@@ -172,7 +160,19 @@ int main(int argc, char *argv[]) {
     }
 
     // do whatever you want with the commands, here we just print them
-    run(line);
+    line[strlen(line)] = '\n'; // terminate with new line
+    tokens = tokenize(line);
+    run(tokens);
+
+    for (i = 0; tokens[i] != NULL; i++) {
+      printf("found token %s (remove this debug output later)\n", tokens[i]);
+    }
+
+    // Freeing the allocated memory
+    for (i = 0; tokens[i] != NULL; i++) {
+      free(tokens[i]);
+    }
+    free(tokens);
 
     // char *commands;
     // char *src = line;
