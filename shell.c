@@ -133,6 +133,25 @@ void run(char **tokens) {
   }
 }
 
+void series(char **tokens) {
+  char **ptokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
+  int i, j;
+
+  j = 0;
+  for (i = 0; tokens[i] != NULL; ++i) {
+    if (strcmp(tokens[i], "&&")) {
+      ptokens[j] = tokens[i];
+      ++j;
+    } else {
+      ptokens[j] = NULL;
+      run(ptokens);
+      j = 0;
+    }
+  }
+  ptokens[j] = NULL;
+  run(ptokens);
+}
+
 void parallel(char **tokens) {
   int i;
 
