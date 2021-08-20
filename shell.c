@@ -60,9 +60,7 @@ void background(char **tokens) {
   } else if (ret == 0) { // Child process
     setpgid(0, 0);
     if (tokens[0] == NULL) {
-      printf("Shell: Nothing to do\n");
     } else if (!strcmp(tokens[0], "cd")) {
-      printf("Shell: cd in background doesn't make sense\n");
     } else {
       int p = execvp(tokens[0], tokens);
       if (p == -1) {
@@ -77,7 +75,6 @@ void background(char **tokens) {
 
 void normal(char **tokens) {
   if (tokens[0] == NULL) {
-    printf("Shell: Nothing to do\n");
   } else if (!strcmp(tokens[0], "cd")) {
     // TODO: Add "cd -" compatibility for fun
     if (tokens[1] == NULL || tokens[2] != NULL)
@@ -112,19 +109,8 @@ void run(char **tokens) {
   int bg = 0;
 
   if (interrupt == 1) {
-    printf("Cancelling: ");
-    for (i = 0; tokens[i] != NULL; i++) {
-      printf("%s ", tokens[i]);
-    }
-    printf("\n");
     return;
   }
-
-  printf("Running: ");
-  for (i = 0; tokens[i] != NULL; i++) {
-    printf("%s ", tokens[i]);
-  }
-  printf("\n");
 
   for (i = 0; tokens[i] != NULL; ++i) {
     if (!strcmp(tokens[i], "&") && tokens[i + 1] == NULL) {
@@ -178,7 +164,6 @@ void parallel(char **tokens) {
   if (ret < 0) {
     printf("Shell: Error while calling fork\n");
   } else if (ret == 0) { // Child process
-    // signal(SIGINT, SIG_DFL);
     series(tokens);
     exit(0);
   } else { // ret > 0, Parent process with ret as Child PID
@@ -210,7 +195,6 @@ void work(char **tokens) {
       if (k == -1) {
         printf("Shell: Error while calling waitpid\n");
       } else if (k == foreground_proc[i]) {
-        printf("Shell: Foreground process [%i] reaped\n", k);
         foreground_proc[i] = -1;
       }
     }
@@ -244,15 +228,13 @@ int main(int argc, char *argv[]) {
     scanf("%[^\n]", line);
     getchar();
 
-    // printf("Command entered: %s (remove this debug output later)\n", line);
-
     for (i = 0; i < MAX_BG_PROCESS; i++) {
       if (background_proc[i] > 0) {
         int k = waitpid(background_proc[i], NULL, WNOHANG);
         if (k == -1) {
           printf("Shell: Error while calling waitpid\n");
         } else if (k == background_proc[i]) {
-          printf("Shell: Background process [%i] reaped\n", k);
+          printf("Shell: Background process finished\n");
           background_proc[i] = -1;
         }
       }
@@ -260,13 +242,12 @@ int main(int argc, char *argv[]) {
 
     line[strlen(line)] = '\n'; // terminate with new line
     tokens = tokenize(line);   // convert line to tokens
+
     if (tokens[0] == NULL) {
-      printf("Shell: Nothing to do\n");
     } else if (!strcmp(tokens[0], "exit")) {
       for (i = 0; i < MAX_BG_PROCESS; i++) {
         if (background_proc[i] > -1) {
           kill(background_proc[i], SIGKILL);
-          printf("Shell: Background process [%i] killed\n", background_proc[i]);
           background_proc[i] = -1;
         }
       }
@@ -282,10 +263,6 @@ int main(int argc, char *argv[]) {
       interrupt = 0;
       work(tokens); // work on the tokens
     }
-
-    // for (i = 0; tokens[i] != NULL; i++) {
-    //   printf("found token %s (remove this debug output later)\n", tokens[i]);
-    // }
 
     // Freeing the allocated memory
     for (i = 0; tokens[i] != NULL; i++) {
