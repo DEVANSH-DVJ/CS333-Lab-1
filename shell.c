@@ -13,6 +13,7 @@
 
 int background_proc[MAX_BG_PROCESS];
 int foreground_proc[MAX_FG_PROCESS];
+int interrupt;
 
 /* Splits the string by space and returns the array of tokens
  *
@@ -112,6 +113,15 @@ void run(char **tokens) {
   int i;
   int bg = 0;
 
+  if (interrupt == 1) {
+    printf("Cancelling: ");
+    for (i = 0; tokens[i] != NULL; i++) {
+      printf("%s ", tokens[i]);
+    }
+    printf("\n");
+    return;
+  }
+
   printf("Running: ");
   for (i = 0; tokens[i] != NULL; i++) {
     printf("%s ", tokens[i]);
@@ -170,6 +180,7 @@ void parallel(char **tokens) {
   if (ret < 0) {
     printf("Shell: Error while calling fork\n");
   } else if (ret == 0) { // Child process
+    // signal(SIGINT, SIG_DFL);
     series(tokens);
     exit(0);
   } else { // ret > 0, Parent process with ret as Child PID
@@ -210,10 +221,17 @@ void work(char **tokens) {
   free(ptokens);
 }
 
+void handle_sig(int sig) {
+  printf("\n");
+  interrupt = 1;
+}
+
 int main(int argc, char *argv[]) {
   char line[MAX_INPUT_SIZE];
   char **tokens;
   int i;
+
+  signal(SIGINT, handle_sig);
 
   for (i = 0; i < MAX_BG_PROCESS; ++i) {
     background_proc[i] = -1;
@@ -248,7 +266,7 @@ int main(int argc, char *argv[]) {
     if (tokens[0] == NULL) {
       printf("Shell: Nothing to do\n");
     } else if (!strcmp(tokens[0], "exit")) {
-      for (i = 0; i < 64; i++) {
+      for (i = 0; i < MAX_BG_PROCESS; i++) {
         if (background_proc[i] > -1) {
           kill(background_proc[i], SIGKILL);
           printf("Shell: Background process [%i] killed\n", background_proc[i]);
@@ -256,15 +274,15 @@ int main(int argc, char *argv[]) {
         }
       }
 
+      // Freeing the allocated memory
       for (i = 0; tokens[i] != NULL; i++) {
         free(tokens[i]);
       }
       free(tokens);
 
-      // printf("Exiting\n"); //DEBUG
-
-      exit(0);
+      return 0;
     } else {
+      interrupt = 0;
       work(tokens); // work on the tokens
     }
 
