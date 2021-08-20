@@ -133,6 +133,29 @@ void run(char **tokens) {
   }
 }
 
+void parallel(char **tokens) {
+  int i;
+
+  for (i = 0; i < MAX_FG_PROCESS; i++) {
+    if (foreground_proc[i] == -1) {
+      break;
+    }
+  }
+  if (i == MAX_FG_PROCESS) {
+    printf("Shell: Can't handle more foreground processes\n");
+    return;
+  }
+  int ret = fork();
+  if (ret < 0) {
+    printf("Shell: Error while calling fork\n");
+  } else if (ret == 0) { // Child process
+    run(tokens);
+    exit(0);
+  } else { // ret > 0, Parent process with ret as Child PID
+    foreground_proc[i] = ret;
+  }
+}
+
 void split_parallel(char **tokens) {
   char **ptokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
   int i, j;
