@@ -59,11 +59,17 @@ void bg(char *line) {
     printf("Shell: Error while calling fork\n");
   } else if (ret == 0) { // Child process
     setpgid(0, 0);
-    int p = execvp(tokens[0], tokens);
-    if (p == -1) {
-      printf("Shell: Incorrect command\n");
-      exit(0);
+    if (tokens[0] == NULL) {
+      printf("Nothing to do\n");
+    } else if (!strcmp(tokens[0], "cd")) {
+      printf("cd in background doesn't make sense\n");
+    } else {
+      int p = execvp(tokens[0], tokens);
+      if (p == -1) {
+        printf("Shell: Incorrect command\n");
+      }
     }
+    exit(0);
   } else { // ret > 0, Parent process with ret as Child PID
     background_proc[i] = ret;
   }
@@ -93,8 +99,8 @@ void work(char line[]) {
       int p = execvp(tokens[0], tokens);
       if (p == -1) {
         printf("Shell: Incorrect command\n");
-        exit(0);
       }
+      exit(0);
     } else { // ret > 0, Parent process with ret as Child PID
       int k = waitpid(ret, NULL, 0);
       if (k == -1) {
