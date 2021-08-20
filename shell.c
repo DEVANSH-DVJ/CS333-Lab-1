@@ -150,6 +150,8 @@ void series(char **tokens) {
   }
   ptokens[j] = NULL;
   run(ptokens);
+
+  free(ptokens);
 }
 
 void parallel(char **tokens) {
@@ -204,6 +206,8 @@ void work(char **tokens) {
       }
     }
   }
+
+  free(ptokens);
 }
 
 int main(int argc, char *argv[]) {
