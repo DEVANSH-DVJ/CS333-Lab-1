@@ -241,13 +241,6 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
-    bzero(line, sizeof(line));
-    printf("$ ");
-    scanf("%[^\n]", line);
-    getchar();
-
-    // printf("Command entered: %s (remove this debug output later)\n", line);
-
     for (i = 0; i < MAX_BG_PROCESS; i++) {
       if (background_proc[i] > 0) {
         int k = waitpid(background_proc[i], NULL, WNOHANG);
@@ -259,6 +252,13 @@ int main(int argc, char *argv[]) {
         }
       }
     }
+
+    bzero(line, sizeof(line));
+    printf("$ ");
+    scanf("%[^\n]", line);
+    getchar();
+
+    // printf("Command entered: %s (remove this debug output later)\n", line);
 
     // do whatever you want with the commands, here we just print them
     line[strlen(line)] = '\n'; // terminate with new line
