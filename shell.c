@@ -8,6 +8,9 @@
 #define MAX_INPUT_SIZE 1024
 #define MAX_TOKEN_SIZE 64
 #define MAX_NUM_TOKENS 64
+#define MAX_BG_PROCESS 64
+
+int background_proc[MAX_BG_PROCESS];
 
 /* Splits the string by space and returns the array of tokens
  *
@@ -36,6 +39,28 @@ char **tokenize(char *line) {
   free(token);
   tokens[tokenNo] = NULL;
   return tokens;
+}
+
+void bg(char *line) {
+  char **tokens = tokenize(line);
+  int ret = fork();
+  if (ret < 0) {
+    printf("Shell: Error while calling fork\n");
+  } else if (ret == 0) { // Child process
+    setpgid(0, 0);
+    int p = execvp(tokens[0], tokens);
+    if (p == -1) {
+      printf("Shell: Incorrect command\n");
+      exit(0);
+    }
+  } else { // ret > 0, Parent process with ret as Child PID
+    for (int i = 0; i < 64; i++) {
+      if (background_proc[i] == -1) {
+        background_proc[i] = ret;
+        break;
+      }
+    }
+  }
 }
 
 void work(char line[]) {
