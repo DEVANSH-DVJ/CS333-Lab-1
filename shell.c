@@ -173,6 +173,25 @@ int main(int argc, char *argv[]) {
 
     // do whatever you want with the commands, here we just print them
     run(line);
+
+    // char *commands;
+    // char *src = line;
+    // char *next = src;
+
+    // while ((next = strstr(src, " &&& ")) != NULL) {
+    //   printf("%li\n", next - src);
+    //   commands = (char *)malloc((next - src) * sizeof(char));
+    //   memcpy(commands, src, next - src);
+
+    //   printf("%s y\n", commands);
+
+    //   /* Skip the delimiter */
+    //   src = next + 5;
+    // }
+
+    // /* Handle the last token */
+    // commands = src;
+    // printf("%s y\n", commands);
   }
 
   return 0;
