@@ -38,7 +38,10 @@ char **tokenize(char *line) {
   return tokens;
 }
 
-void work(char **tokens) {
+void work(char line[]) {
+  char **tokens = tokenize(line);
+  int i;
+
   if (tokens[0] == NULL) {
     printf("Nothing to do\n");
   } else if (!strcmp(tokens[0], "cd")) {
@@ -68,12 +71,21 @@ void work(char **tokens) {
       }
     }
   }
+
+  for (i = 0; tokens[i] != NULL; i++) {
+    printf("found token %s (remove this debug output later)\n", tokens[i]);
+  }
+
+  // Freeing the allocated memory
+  for (i = 0; tokens[i] != NULL; i++) {
+    free(tokens[i]);
+  }
+  free(tokens);
 }
 
 int main(int argc, char *argv[]) {
   char line[MAX_INPUT_SIZE];
   char **tokens;
-  int i;
 
   while (1) {
     /* BEGIN: TAKING INPUT */
@@ -86,20 +98,9 @@ int main(int argc, char *argv[]) {
     /* END: TAKING INPUT */
 
     line[strlen(line)] = '\n'; // terminate with new line
-    tokens = tokenize(line);
 
     // do whatever you want with the commands, here we just print them
-    work(tokens);
-
-    for (i = 0; tokens[i] != NULL; i++) {
-      printf("found token %s (remove this debug output later)\n", tokens[i]);
-    }
-
-    // Freeing the allocated memory
-    for (i = 0; tokens[i] != NULL; i++) {
-      free(tokens[i]);
-    }
-    free(tokens);
+    work(line);
   }
 
   return 0;
