@@ -15,9 +15,7 @@ int background_proc[MAX_BG_PROCESS];
 int foreground_proc[MAX_FG_PROCESS];
 int interrupt;
 
-/* Splits the string by space and returns the array of tokens
- *
- */
+// Splits the string by space and returns the array of tokens
 char **tokenize(char *line) {
   char **tokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
   char *token = (char *)malloc(MAX_TOKEN_SIZE * sizeof(char));
@@ -81,7 +79,7 @@ void normal(char **tokens) {
   if (tokens[0] == NULL) {
     printf("Shell: Nothing to do\n");
   } else if (!strcmp(tokens[0], "cd")) {
-    // TODO: Add "cd -" command for fun
+    // TODO: Add "cd -" compatibility for fun
     if (tokens[1] == NULL || tokens[2] != NULL)
       printf("Shell: Incorrect command\n");
     else {
@@ -260,7 +258,6 @@ int main(int argc, char *argv[]) {
 
     // printf("Command entered: %s (remove this debug output later)\n", line);
 
-    // do whatever you want with the commands, here we just print them
     line[strlen(line)] = '\n'; // terminate with new line
     tokens = tokenize(line);   // convert line to tokens
     if (tokens[0] == NULL) {
