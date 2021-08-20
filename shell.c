@@ -43,8 +43,7 @@ char **tokenize(char *line) {
   return tokens;
 }
 
-void bg(char *line) {
-  char **tokens = tokenize(line);
+void background(char **tokens) {
   int i;
 
   for (i = 0; i < MAX_BG_PROCESS; i++) {
@@ -77,10 +76,7 @@ void bg(char *line) {
   }
 }
 
-void work(char line[]) {
-  char **tokens = tokenize(line);
-  int i;
-
+void normal(char **tokens) {
   if (tokens[0] == NULL) {
     printf("Nothing to do\n");
   } else if (!strcmp(tokens[0], "cd")) {
@@ -109,6 +105,26 @@ void work(char line[]) {
         printf("Shell: Error while calling waitpid\n");
       }
     }
+  }
+}
+
+void run(char line[]) {
+  char **tokens = tokenize(line);
+  int i;
+  int bg = 0;
+
+  for (i = 0; tokens[i] != NULL; ++i) {
+    if (!strcmp(tokens[i], "&") && tokens[i + 1] == NULL) {
+      tokens[i] = NULL;
+      bg = 1;
+      break;
+    }
+  }
+
+  if (bg) {
+    background(tokens);
+  } else {
+    normal(tokens);
   }
 
   for (i = 0; tokens[i] != NULL; i++) {
@@ -146,7 +162,7 @@ int main(int argc, char *argv[]) {
     line[strlen(line)] = '\n'; // terminate with new line
 
     // do whatever you want with the commands, here we just print them
-    work(line);
+    run(line);
   }
 
   return 0;
