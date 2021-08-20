@@ -9,8 +9,10 @@
 #define MAX_TOKEN_SIZE 64
 #define MAX_NUM_TOKENS 64
 #define MAX_BG_PROCESS 64
+#define MAX_FG_PROCESS 64
 
 int background_proc[MAX_BG_PROCESS];
+int foreground_proc[MAX_FG_PROCESS];
 
 /* Splits the string by space and returns the array of tokens
  *
@@ -122,7 +124,14 @@ void work(char line[]) {
 
 int main(int argc, char *argv[]) {
   char line[MAX_INPUT_SIZE];
-  char **tokens;
+  int i;
+
+  for (i = 0; i < MAX_BG_PROCESS; ++i) {
+    background_proc[i] = -1;
+  }
+  for (i = 0; i < MAX_FG_PROCESS; ++i) {
+    foreground_proc[i] = -1;
+  }
 
   while (1) {
     /* BEGIN: TAKING INPUT */
