@@ -1,7 +1,10 @@
-all: shell
+all: main debug
 
-shell:
+main:
 	gcc shell.c -o shell.o
+
+debug:
+	gcc debug.c -o debug.o
 
 clean:
 	rm -rf *.o
