@@ -38,6 +38,38 @@ char **tokenize(char *line) {
   return tokens;
 }
 
+void work(char **tokens) {
+  if (tokens[0] == NULL) {
+    printf("Nothing to do\n");
+  } else if (!strcmp(tokens[0], "cd")) {
+    // TODO: Add "cd -" command for fun
+    if (tokens[1] == NULL || tokens[2] != NULL)
+      printf("Shell: Incorrect command\n");
+    else {
+      int l = chdir(tokens[1]);
+      if (l == -1) {
+        printf("Shell: Directory not found\n");
+      }
+    }
+  } else {
+    int ret = fork();
+    if (ret < 0) {
+      printf("Shell: Error while calling fork\n");
+    } else if (ret == 0) { // Child process
+      int p = execvp(tokens[0], tokens);
+      if (p == -1) {
+        printf("Shell: Incorrect command\n");
+        exit(0);
+      }
+    } else { // ret > 0, Parent process with ret as Child PID
+      int k = waitpid(ret, NULL, 0);
+      if (k == -1) {
+        printf("Shell: Error while calling waitpid\n");
+      }
+    }
+  }
+}
+
 int main(int argc, char *argv[]) {
   char line[MAX_INPUT_SIZE];
   char **tokens;
@@ -57,35 +89,7 @@ int main(int argc, char *argv[]) {
     tokens = tokenize(line);
 
     // do whatever you want with the commands, here we just print them
-    if (tokens[0] == NULL) {
-      printf("Nothing to do\n");
-    } else if (!strcmp(tokens[0], "cd")) {
-      // TODO: Add cd - command for fun
-      if (tokens[1] == NULL || tokens[2] != NULL)
-        printf("Shell: Incorrect command\n");
-      else {
-        int l = chdir(tokens[1]);
-        if (l == -1) {
-          printf("Shell: Directory not found\n");
-        }
-      }
-    } else {
-      int ret = fork();
-      if (ret < 0) {
-        printf("Shell: Error while calling fork\n");
-      } else if (ret == 0) {
-        int p = execvp(tokens[0], tokens);
-        if (p == -1) {
-          printf("Shell: Incorrect command\n");
-          exit(0);
-        }
-      } else if (ret > 0) {
-        int k = waitpid(ret, NULL, 0);
-        if (k == -1) {
-          printf("Shell: Error while calling waitpid\n");
-        }
-      }
-    }
+    work(tokens);
 
     for (i = 0; tokens[i] != NULL; i++) {
       printf("found token %s (remove this debug output later)\n", tokens[i]);
@@ -97,5 +101,6 @@ int main(int argc, char *argv[]) {
     }
     free(tokens);
   }
+
   return 0;
 }
