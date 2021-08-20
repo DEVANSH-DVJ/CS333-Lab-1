@@ -175,7 +175,7 @@ void parallel(char **tokens) {
   }
 }
 
-void split_parallel(char **tokens) {
+void work(char **tokens) {
   char **ptokens = (char **)malloc(MAX_NUM_TOKENS * sizeof(char *));
   int i, j;
 
@@ -240,8 +240,8 @@ int main(int argc, char *argv[]) {
 
     // do whatever you want with the commands, here we just print them
     line[strlen(line)] = '\n'; // terminate with new line
-    tokens = tokenize(line);
-    split_parallel(tokens);
+    tokens = tokenize(line); // convert line to tokens
+    work(tokens); // work on the tokens
 
     // for (i = 0; tokens[i] != NULL; i++) {
     //   printf("found token %s (remove this debug output later)\n", tokens[i]);
@@ -252,25 +252,6 @@ int main(int argc, char *argv[]) {
       free(tokens[i]);
     }
     free(tokens);
-
-    // char *commands;
-    // char *src = line;
-    // char *next = src;
-
-    // while ((next = strstr(src, " &&& ")) != NULL) {
-    //   printf("%li\n", next - src);
-    //   commands = (char *)malloc((next - src) * sizeof(char));
-    //   memcpy(commands, src, next - src);
-
-    //   printf("%s y\n", commands);
-
-    //   /* Skip the delimiter */
-    //   src = next + 5;
-    // }
-
-    // /* Handle the last token */
-    // commands = src;
-    // printf("%s y\n", commands);
   }
 
   return 0;
