@@ -150,16 +150,26 @@ int main(int argc, char *argv[]) {
   }
 
   while (1) {
-    /* BEGIN: TAKING INPUT */
     bzero(line, sizeof(line));
     printf("$ ");
     scanf("%[^\n]", line);
     getchar();
 
     printf("Command entered: %s (remove this debug output later)\n", line);
-    /* END: TAKING INPUT */
 
     line[strlen(line)] = '\n'; // terminate with new line
+
+    for (i = 0; i < MAX_BG_PROCESS; i++) {
+      if (background_proc[i] > 0) {
+        int k = waitpid(background_proc[i], NULL, WNOHANG);
+        if (k == -1) {
+          printf("Shell: Error while calling waitpid\n");
+        } else if (k == background_proc[i]) {
+          printf("Shell: Background process [%i] finished\n", k);
+          background_proc[i] = -1;
+        }
+      }
+    }
 
     // do whatever you want with the commands, here we just print them
     run(line);
