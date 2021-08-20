@@ -112,6 +112,12 @@ void run(char **tokens) {
   int i;
   int bg = 0;
 
+  printf("Running: ");
+  for (i = 0; tokens[i] != NULL; i++) {
+    printf("%s ", tokens[i]);
+  }
+  printf("\n");
+
   for (i = 0; tokens[i] != NULL; ++i) {
     if (!strcmp(tokens[i], "&") && tokens[i + 1] == NULL) {
       tokens[i] = NULL;
