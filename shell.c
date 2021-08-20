@@ -52,7 +52,7 @@ void background(char **tokens) {
     }
   }
   if (i == MAX_BG_PROCESS) {
-    printf("Can't handle more background processes\n");
+    printf("Shell: Can't handle more background processes\n");
     return;
   }
   int ret = fork();
@@ -61,9 +61,9 @@ void background(char **tokens) {
   } else if (ret == 0) { // Child process
     setpgid(0, 0);
     if (tokens[0] == NULL) {
-      printf("Nothing to do\n");
+      printf("Shell: Nothing to do\n");
     } else if (!strcmp(tokens[0], "cd")) {
-      printf("cd in background doesn't make sense\n");
+      printf("Shell: cd in background doesn't make sense\n");
     } else {
       int p = execvp(tokens[0], tokens);
       if (p == -1) {
@@ -78,7 +78,7 @@ void background(char **tokens) {
 
 void normal(char **tokens) {
   if (tokens[0] == NULL) {
-    printf("Nothing to do\n");
+    printf("Shell: Nothing to do\n");
   } else if (!strcmp(tokens[0], "cd")) {
     // TODO: Add "cd -" command for fun
     if (tokens[1] == NULL || tokens[2] != NULL)
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
     scanf("%[^\n]", line);
     getchar();
 
-    printf("Command entered: %s (remove this debug output later)\n", line);
+    // printf("Command entered: %s (remove this debug output later)\n", line);
 
     for (i = 0; i < MAX_BG_PROCESS; i++) {
       if (background_proc[i] > 0) {
@@ -164,9 +164,9 @@ int main(int argc, char *argv[]) {
     tokens = tokenize(line);
     run(tokens);
 
-    for (i = 0; tokens[i] != NULL; i++) {
-      printf("found token %s (remove this debug output later)\n", tokens[i]);
-    }
+    // for (i = 0; tokens[i] != NULL; i++) {
+    //   printf("found token %s (remove this debug output later)\n", tokens[i]);
+    // }
 
     // Freeing the allocated memory
     for (i = 0; tokens[i] != NULL; i++) {
