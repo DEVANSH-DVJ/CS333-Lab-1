@@ -167,12 +167,24 @@ void split_parallel(char **tokens) {
       ++j;
     } else {
       ptokens[j] = NULL;
-      run(ptokens);
+      parallel(ptokens);
       j = 0;
     }
   }
   ptokens[j] = NULL;
-  run(ptokens);
+  parallel(ptokens);
+
+  for (i = 0; i < MAX_FG_PROCESS; ++i) {
+    if (foreground_proc[i] > 0) {
+      int k = waitpid(foreground_proc[i], NULL, 0);
+      if (k == -1) {
+        printf("Shell: Error while calling waitpid\n");
+      } else if (k == foreground_proc[i]) {
+        printf("Shell: Foreground process [%i] reaped\n", k);
+        foreground_proc[i] = -1;
+      }
+    }
+  }
 }
 
 int main(int argc, char *argv[]) {
@@ -201,7 +213,7 @@ int main(int argc, char *argv[]) {
         if (k == -1) {
           printf("Shell: Error while calling waitpid\n");
         } else if (k == background_proc[i]) {
-          printf("Shell: Background process [%i] finished\n", k);
+          printf("Shell: Background process [%i] reaped\n", k);
           background_proc[i] = -1;
         }
       }
