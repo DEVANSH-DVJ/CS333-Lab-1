@@ -168,7 +168,7 @@ void parallel(char **tokens) {
   if (ret < 0) {
     printf("Shell: Error while calling fork\n");
   } else if (ret == 0) { // Child process
-    run(tokens);
+    series(tokens);
     exit(0);
   } else { // ret > 0, Parent process with ret as Child PID
     foreground_proc[i] = ret;
@@ -191,7 +191,7 @@ void split_parallel(char **tokens) {
     }
   }
   ptokens[j] = NULL;
-  parallel(ptokens);
+  series(ptokens);
 
   for (i = 0; i < MAX_FG_PROCESS; ++i) {
     if (foreground_proc[i] > 0) {
