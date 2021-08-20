@@ -240,8 +240,29 @@ int main(int argc, char *argv[]) {
 
     // do whatever you want with the commands, here we just print them
     line[strlen(line)] = '\n'; // terminate with new line
-    tokens = tokenize(line); // convert line to tokens
-    work(tokens); // work on the tokens
+    tokens = tokenize(line);   // convert line to tokens
+    if (tokens[0] == NULL) {
+      printf("Shell: Nothing to do\n");
+    } else if (!strcmp(tokens[0], "exit")) {
+      for (i = 0; i < 64; i++) {
+        if (background_proc[i] > -1) {
+          kill(background_proc[i], SIGKILL);
+          printf("Shell: Background process [%i] killed\n", background_proc[i]);
+          background_proc[i] = -1;
+        }
+      }
+
+      for (i = 0; tokens[i] != NULL; i++) {
+        free(tokens[i]);
+      }
+      free(tokens);
+
+      // printf("Exiting\n"); //DEBUG
+
+      exit(0);
+    } else {
+      work(tokens); // work on the tokens
+    }
 
     // for (i = 0; tokens[i] != NULL; i++) {
     //   printf("found token %s (remove this debug output later)\n", tokens[i]);
