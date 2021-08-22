@@ -79,7 +79,17 @@ void background(char **tokens) {
     if (tokens[0] == NULL) {
       // Nothing to do
     } else if (!strcmp(tokens[0], "cd")) {
+      // Special case cd
       // Doesn't make sense to run cd in background
+      // Even then, check for format of argument
+      if (tokens[1] == NULL || tokens[2] != NULL)
+        printf("Shell: Incorrect command\n");
+      else {
+        int l = chdir(tokens[1]);
+        if (l == -1) {
+          printf("Shell: Directory not found\n");
+        }
+      }
     } else {
       // Load and run the executable
       int p = execvp(tokens[0], tokens);
@@ -285,6 +295,7 @@ void work(char **tokens) {
 void handle_sig(int sig) {
   printf("\n");
   interrupt = 1;
+  // SIGINT passed to children in same process group as well
 }
 
 int main(int argc, char *argv[]) {
@@ -330,22 +341,26 @@ int main(int argc, char *argv[]) {
     if (tokens[0] == NULL) {
       // Nothing to do
     } else if (!strcmp(tokens[0], "exit")) {
-      // Kill background processes before exit
-      for (i = 0; i < MAX_BG_PROCESS; i++) {
-        if (background_proc[i] > -1) {
-          kill(background_proc[i], SIGKILL);
-          background_proc[i] = -1;
+      if (tokens[1] == NULL) {
+        // Kill background processes before exit
+        for (i = 0; i < MAX_BG_PROCESS; i++) {
+          if (background_proc[i] > -1) {
+            kill(background_proc[i], SIGKILL);
+            background_proc[i] = -1;
+          }
         }
-      }
 
-      // Free the allocated memory
-      for (i = 0; tokens[i] != NULL; i++) {
-        free(tokens[i]);
-      }
-      free(tokens);
+        // Free the allocated memory
+        for (i = 0; tokens[i] != NULL; i++) {
+          free(tokens[i]);
+        }
+        free(tokens);
 
-      // Just exit
-      return 0;
+        // Just exit
+        return 0;
+      } else {
+        printf("Shell: exit command doesn't have any arguments\n");
+      }
     } else {
       // Set interrupt to 0 (new command will run)
       interrupt = 0;
