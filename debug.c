@@ -101,6 +101,7 @@ void background(char **tokens) {
     exit(0);
   } else { // ret > 0
     // Parent process with ret as Child PID
+    printf("Shell: Background process [%i] created\n", ret);
     background_proc[i] = ret;
   }
 }
@@ -253,6 +254,7 @@ void parallel(char **tokens) {
     exit(0);
   } else { // ret > 0
     // Parent process with ret as Child PID
+    printf("Shell: Foreground process [%i] created\n", ret);
     foreground_proc[i] = ret;
   }
 }
